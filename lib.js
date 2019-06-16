@@ -3,12 +3,23 @@ import Vue from 'vue/dist/vue';
 let activeInstance = null;
 let activeWatcherFn = null;
 
+let DOM_EL = document.createElement('div');
+
 Vue.mixin({
   beforeCreate () {
     activeInstance = this;
     let context;
     if (this.$options.setup) {
       context = this.$options.setup.call(this);
+    }
+
+    // Is a render function.
+    if (typeof context === 'function') {
+      this.$options.render = function (h) {
+        return context(h, this.$props, this.$slots, this.$vnode);
+      }
+
+      return;
     }
 
     if (context) {
@@ -37,6 +48,7 @@ function value (val) {
   observable._isWrapper = true;
   Object.defineProperty(observable, 'value', {
     enumerable: false,
+    configurable: true,
     get () {
       activeWatcherFn = observable;
 
@@ -51,14 +63,22 @@ function value (val) {
 }
 
 function watch (fn, handler) {
-  fn();
-  let val;
-  if (activeWatcherFn) {
-    val = state({ ...activeWatcherFn });
+  if (typeof fn === 'function') {
+    fn();
+  } else {
+    activeWatcherFn = fn;
+  }
 
-    Object.defineProperty(val, 'value', {
+  if (activeWatcherFn) {
+    const setter = function (value) {
+      const oldValue = this._value;
+      this._value = value;
+      handler(value, oldValue);
+    };
+
+    Object.defineProperty(activeWatcherFn, 'value', {
       set (value) {
-        handler(value);
+        setter.call(this, value);
       }
     });
   }
@@ -98,6 +118,34 @@ function onCreated (cb) {
   activeInstance.$on('hook:created', cb.bind(activeInstance));
 }
 
+
+function nestData (data) {
+  return Object.keys(data).reduce((curr, key) => {
+    // converts events from Vue 3.0 flat vnode data to 2.0 nested structure.
+    if (key.indexOf('on') === 0) {
+      curr.on = curr.on || {};
+      const evt = key.slice(2).toLowerCase();
+      curr.on[evt] = curr.on[evt] ? [...curr.on[evt], data[key]] : [data[key]];
+    }
+
+    if (key in DOM_EL) {
+      curr.domProps = curr.domProps || {};
+      curr.domProps[key] = data[key];
+    }
+
+    return curr;
+  }, {});
+}
+
+function createElement (vnode, data, children) {
+  const normalizedData = nestData(data);
+  if (Array.isArray(children)) {
+    children = children.map(c => nestData(c));
+  }
+
+  return activeInstance.$createElement(vnode, normalizedData, children);
+}
+
 export {
   value,
   state,
@@ -105,5 +153,6 @@ export {
   watch,
   onMounted,
   onCreated,
-  onUnmounted
+  onUnmounted,
+  createElement
 };

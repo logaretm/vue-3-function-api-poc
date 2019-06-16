@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, value, computed, watch } from './lib';
+import { onMounted, onUnmounted, value, computed, watch, createElement as h } from './lib';
 import Vue from 'vue/dist/vue';
 
 function useMouse() {
@@ -35,15 +35,16 @@ new Vue({
   setup () {
     const { x, y } = useMouse();
 
-    return { x, y };
-  },
-  template: `<div>{{ x }} {{ y }}</div>`
+    return () => {
+      return h('div', {}, `${x.value} ${y.value}`);
+    };
+  }
 }).$mount('#mouse');
 
 new Vue({
   setup () {
     const { count, double, increment } = useCounter();
-    watch(() => count.value, () => {
+    watch(count, () => {
       console.log('Oi! Count has changed.');
     });
 
