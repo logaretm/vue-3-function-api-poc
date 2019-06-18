@@ -16,6 +16,11 @@ The stuff I managed to hack my way to:
 
 This implementation is not complete and will probably break.
 
-<!-- I have written about it [here]() -->
+I have written about it [here](https://logaretm.com/blog/what-the-vue-function-api-feel-like).
+
+### Examples
+
+- [useMouse](https://codesandbox.io/s/vue-function-api-usemouse-q6fd3)
+- [useQuery](https://codesandbox.io/s/vue-function-api-usemouse-2pmbn)
 
 feel free to play around 🥳
