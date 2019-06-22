@@ -1,5 +1,7 @@
 ### DON'T USE THIS IN PRODUCTION
 
+[USE THIS INSTEAD](https://github.com/liximomo/vue-function-api)
+
 This is an implementation of the [new function API](https://github.com/vuejs/rfcs/pull/42) using Vue.js 2.x. This is just a toy-project to test out ideas for Vue 3.x with the function API.
 
 ### Implemented API
